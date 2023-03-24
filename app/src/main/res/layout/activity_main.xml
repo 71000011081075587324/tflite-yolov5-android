@@ -4,12 +4,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:orientation="vertical"
+    android:background="@color/white">
 
-    <TextView
+    <com.example.recognitionproject.common.ui.LButton
+        android:id="@+id/lbtn_camera_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
+        android:text="@string/bltn_camera_start"
+        android:textSize="25sp"
+        android:background="@drawable/lbtn_corner"
+        android:textColor="@color/black"
+        android:paddingRight="10dp"
+        android:paddingLeft="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
