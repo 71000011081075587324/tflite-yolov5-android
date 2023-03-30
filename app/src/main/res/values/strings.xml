@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">RecognitionProject</string>
     <string name="bltn_camera_start">开启摄像头进行场景检测</string>
+    <string name="bltn_camera_back">关闭摄像头</string>
 </resources>
