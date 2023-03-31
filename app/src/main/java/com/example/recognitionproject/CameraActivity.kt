@@ -40,6 +40,11 @@ class CameraActivity : BaseActivity() {
         }
     }
 
+    /**
+     *  使用 CameraX api
+     *  打开摄像头并对摄像头实时帧添加 Analyzer 进行分析处理
+     *  官方文档: https://developer.android.com/training/camerax?hl=zh-cn
+     */
     private fun startCamera() {
         // 创建 ProcessCameraProvider 的实例。这用于将相机的生命周期绑定到生命周期所有者。
         // 这消除了打开和关闭相机的任务，因为 CameraX 具有生命周期感知能力
