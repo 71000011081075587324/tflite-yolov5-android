@@ -1,8 +1,7 @@
 package com.example.recognitionproject.common.ui
 
 /**
- * Created by fangzicheng on 3/23/23
- * @author fangzicheng@bytedance.com
+ * Created by fangzicheng
  */
 object AccessibleValue {
     // 单位为 dp

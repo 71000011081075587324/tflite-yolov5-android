@@ -5,12 +5,7 @@ import android.util.TypedValue
 
 
 /**
- * Created by fangzicheng on 3/23/23
- * @author fangzicheng@bytedance.com
-
-
-
-
+ * Created by fangzicheng
  */
 object UnitUtils {
     fun dp2px(context : Context, dpValue : Float) : Int {

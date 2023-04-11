@@ -6,8 +6,7 @@ import androidx.appcompat.widget.AppCompatButton
 import com.example.recognitionproject.common.utils.dp
 
 /**
- * Created by fangzicheng on 3/22/23
- * @author fangzicheng@bytedance.com
+ * Created by fangzicheng
  */
 class LButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null

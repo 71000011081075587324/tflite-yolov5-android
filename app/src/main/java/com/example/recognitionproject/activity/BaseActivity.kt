@@ -6,12 +6,7 @@ import androidx.core.view.WindowCompat
 import com.example.recognitionproject.R
 
 /**
- * Created by fangzicheng on 3/25/23
- * @author fangzicheng@bytedance.com
-
-
-
-
+ * Created by fangzicheng
  */
 open class BaseActivity: AppCompatActivity()  {
     override fun onCreate(savedInstanceState: Bundle?) {

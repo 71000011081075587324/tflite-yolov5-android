@@ -1,8 +1,12 @@
 package com.example.recognitionproject
 
 import android.graphics.Bitmap
-import android.graphics.Matrix
 import android.os.Bundle
+import android.os.SystemClock
+import android.util.Log
+import android.view.WindowManager
+import android.widget.Toast
+import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
@@ -13,6 +17,10 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.example.recognitionproject.activity.BaseActivity
 import com.example.recognitionproject.common.ui.LButton
+import com.example.recognitionproject.common.utils.BitmapUtils
+import com.example.tflite_yolov5.DetectorFactory
+import com.example.tflite_yolov5.classifier.YoloV5Classifier
+import java.io.IOException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -23,11 +31,15 @@ class CameraActivity : BaseActivity() {
     private var lbtnBack : LButton? = null
     private var cameraExecutor: ExecutorService? = null
 
+    private var detector: YoloV5Classifier? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) // 保持屏幕常亮
         setContentView(R.layout.activity_camera)
         cameraExecutor = Executors.newSingleThreadExecutor()
         initView()
+        initDetector()
         startCamera()
     }
 
@@ -36,6 +48,22 @@ class CameraActivity : BaseActivity() {
         lbtnBack = findViewById(R.id.lbtn_camera_back)
 
         lbtnBack?.setOnClickListener {
+            finish()
+        }
+    }
+
+    /**
+     * 构造物体识别模型检测器
+     */
+    private fun initDetector() {
+        try {
+            detector = DetectorFactory.getDetector(applicationContext)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            val toast = Toast.makeText(
+                applicationContext, "物体识别模型初始化失败", Toast.LENGTH_SHORT
+            )
+            toast.show()
             finish()
         }
     }
@@ -68,13 +96,24 @@ class CameraActivity : BaseActivity() {
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             val imageAnalyzer = ImageAnalysis.Builder()
+                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 .setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build()
                 .also {
                     cameraExecutor?.let { executor ->
                         it.setAnalyzer(executor, CameraAnalyzer {
+                            if (this.isDestroyed) {
+                                detector?.close()
+                                return@CameraAnalyzer
+                            }
                             // 传入参数为摄像头 bitmap
-
+                            val startTime = SystemClock.uptimeMillis()
+                            val finalBitmap = BitmapUtils.resizeBitmap(it, detector?.inputSize, detector?.inputSize)
+                            val results = detector?.recognizeImage(finalBitmap)
+                            Log.d("fzc", "recognizeImage process timeMs : ${SystemClock.uptimeMillis() - startTime}")
+                            results?.forEach { item ->
+                                Log.d("fzc", "item: id = ${item.id} confidence = ${item.confidence} title = ${item.title} location = ${item.location} detectedClass = ${item.detectedClass}")
+                            }
                         })
                     }
                 }
@@ -118,18 +157,7 @@ class CameraActivity : BaseActivity() {
             )
             buffer.position(0)
             bitmap.copyPixelsFromBuffer(buffer)
-            return adjustPhotoRotation(bitmap, 90f)
-        }
-
-        // 旋转 bitmap
-        private fun adjustPhotoRotation(bm: Bitmap, orientationDegree: Float): Bitmap? {
-            val m = Matrix()
-            m.setRotate(orientationDegree, bm.width.toFloat() / 2, bm.height.toFloat() / 2)
-            try {
-                return Bitmap.createBitmap(bm, 0, 0, bm.width, bm.height, m, true)
-            } catch (ex: OutOfMemoryError) {
-            }
-            return null
+            return BitmapUtils.adjustPhotoRotation(bitmap, 90f)
         }
 
     }
