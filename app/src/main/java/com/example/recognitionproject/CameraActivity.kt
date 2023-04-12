@@ -3,6 +3,7 @@ package com.example.recognitionproject
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.SystemClock
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
@@ -19,19 +20,25 @@ import com.example.recognitionproject.activity.BaseActivity
 import com.example.recognitionproject.common.ui.LButton
 import com.example.recognitionproject.common.utils.BitmapUtils
 import com.example.tflite_yolov5.DetectorFactory
+import com.example.tflite_yolov5.classifier.Classifier
 import com.example.tflite_yolov5.classifier.YoloV5Classifier
 import java.io.IOException
+import java.util.ArrayList
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 
 class CameraActivity : BaseActivity() {
 
-    private var viewFinder : PreviewView? = null
-    private var lbtnBack : LButton? = null
+    private var viewFinder: PreviewView? = null
+    private var lbtnBack: LButton? = null
     private var cameraExecutor: ExecutorService? = null
 
     private var detector: YoloV5Classifier? = null
+
+    private var textToSpeech: TextToSpeech? = null
+    private var textToSpeechHasReady = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +47,7 @@ class CameraActivity : BaseActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
         initView()
         initDetector()
+        initTextToSpeech()
         startCamera()
     }
 
@@ -65,6 +73,30 @@ class CameraActivity : BaseActivity() {
             )
             toast.show()
             finish()
+        }
+    }
+
+    private fun initTextToSpeech() {
+        textToSpeech = TextToSpeech(baseContext) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                //设置首选语言为中文,注意，语言可能是不可用的，结果将指示此
+                val result = textToSpeech?.setLanguage(Locale.CHINA)
+                if (result == TextToSpeech.LANG_MISSING_DATA ||
+                    result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    //语言数据丢失或不支持该语言。
+                    Toast.makeText(this, "语言数据丢失或不支持该语言", Toast.LENGTH_SHORT).show()
+                } else {
+                    //检查文档中其他可能的结果代码。
+                    // 例如，语言可能对区域设置可用，但对指定的国家和变体不可用
+                    // TTS引擎已成功初始化。
+                    textToSpeechHasReady = true
+                    textToSpeech?.speak("语音播报引擎已成功初始化，下面将开始物体识别语音播放", TextToSpeech.QUEUE_FLUSH, null, "")
+
+                }
+            } else {
+                // 初始化失败
+                Toast.makeText(this, "语音播放初始化失败", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -103,7 +135,13 @@ class CameraActivity : BaseActivity() {
                     cameraExecutor?.let { executor ->
                         it.setAnalyzer(executor, CameraAnalyzer {
                             if (this.isDestroyed) {
+                                // 存在多线程情况，页面已经被销毁，但是该线程任务刚开始执行
+                                // 因此当页面被销毁时需要释放相应资源
                                 detector?.close()
+                                return@CameraAnalyzer
+                            }
+                            if (!textToSpeechHasReady) {
+                                // 语音播放未初始化成功
                                 return@CameraAnalyzer
                             }
                             // 传入参数为摄像头 bitmap
@@ -111,9 +149,8 @@ class CameraActivity : BaseActivity() {
                             val finalBitmap = BitmapUtils.resizeBitmap(it, detector?.inputSize, detector?.inputSize)
                             val results = detector?.recognizeImage(finalBitmap)
                             Log.d("fzc", "recognizeImage process timeMs : ${SystemClock.uptimeMillis() - startTime}")
-                            results?.forEach { item ->
-                                Log.d("fzc", "item: id = ${item.id} confidence = ${item.confidence} title = ${item.title} location = ${item.location} detectedClass = ${item.detectedClass}")
-                            }
+
+                            recognitionsToSpeech(results)
                         })
                     }
                 }
@@ -162,10 +199,32 @@ class CameraActivity : BaseActivity() {
 
     }
 
+    private fun recognitionsToSpeech(recognitions: ArrayList<Classifier.Recognition>?) {
+        recognitions?.forEach { item ->
+            Log.d("fzc", "item: id = ${item.id} confidence = ${item.confidence} title = ${item.title} location = ${item.location} detectedClass = ${item.detectedClass}")
+            textToSpeech?.speak(item.title, TextToSpeech.QUEUE_ADD, null, item.id)
+        }
+    }
+
+    private fun textToSpeechDestory() {
+        textToSpeechHasReady = false
+        textToSpeech?.shutdown()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        initTextToSpeech()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        textToSpeechDestory()
+    }
 
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor?.shutdown()
+        textToSpeechDestory()
     }
 
 }
