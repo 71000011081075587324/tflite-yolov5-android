@@ -83,7 +83,9 @@ class CameraActivity : BaseActivity() {
                 val result = textToSpeech?.setLanguage(Locale.CHINA)
                 if (result == TextToSpeech.LANG_MISSING_DATA ||
                     result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    //语言数据丢失或不支持该语言。
+                    //语言数据丢失或不支持该语言
+                    // 一般现在手机都有默认集成一些中文语音包(如科大讯飞语音包)
+                    // 如果手机不支持中文语音包，则本项目暂时未兼容，需要添加语音识别 SDK
                     Toast.makeText(this, "语言数据丢失或不支持该语言", Toast.LENGTH_SHORT).show()
                 } else {
                     //检查文档中其他可能的结果代码。
@@ -91,7 +93,6 @@ class CameraActivity : BaseActivity() {
                     // TTS引擎已成功初始化。
                     textToSpeechHasReady = true
                     textToSpeech?.speak("语音播报引擎已成功初始化，下面将开始物体识别语音播放", TextToSpeech.QUEUE_FLUSH, null, "")
-
                 }
             } else {
                 // 初始化失败
