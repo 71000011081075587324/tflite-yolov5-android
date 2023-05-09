@@ -22,7 +22,7 @@ object DetectorFactory {
     fun getDetector(context: Context): YoloV5Classifier? {
         val assetManager = context.applicationContext.assets
         val modelFilename = "yolov5s-fp16.tflite"
-        val labelFilename = "class.txt"
+        val labelFilename = "class_cn.txt"
         val isQuantized = false
         val isNNAPI = false
         val isGPU = false
