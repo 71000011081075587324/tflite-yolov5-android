@@ -443,7 +443,7 @@ public class YoloV5Classifier implements Classifier {
         }
 
         final ArrayList<Recognition> recognitions = nms(detections);
-        Log.d("fzc", "recognitions.size = " + recognitions.size());
+//        Log.d("fzc", "recognitions.size = " + recognitions.size());
         return recognitions;
     }
 

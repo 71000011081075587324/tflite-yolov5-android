@@ -23,7 +23,6 @@ import com.example.tflite_yolov5.DetectorFactory
 import com.example.tflite_yolov5.classifier.Classifier
 import com.example.tflite_yolov5.classifier.YoloV5Classifier
 import java.io.IOException
-import java.util.ArrayList
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -39,6 +38,8 @@ class CameraActivity : BaseActivity() {
 
     private var textToSpeech: TextToSpeech? = null
     private var textToSpeechHasReady = false
+
+    private var lastMap : MutableMap<String, Int>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,7 +93,7 @@ class CameraActivity : BaseActivity() {
                     // 例如，语言可能对区域设置可用，但对指定的国家和变体不可用
                     // TTS引擎已成功初始化。
                     textToSpeechHasReady = true
-                    textToSpeech?.speak("语音播报引擎已成功初始化，下面将开始物体识别语音播放", TextToSpeech.QUEUE_FLUSH, null, "")
+//                    textToSpeech?.speak("语音播报引擎已成功初始化，下面将开始物体识别语音播放", TextToSpeech.QUEUE_FLUSH, null, "")
                 }
             } else {
                 // 初始化失败
@@ -149,9 +150,13 @@ class CameraActivity : BaseActivity() {
                             val startTime = SystemClock.uptimeMillis()
                             val finalBitmap = BitmapUtils.resizeBitmap(it, detector?.inputSize, detector?.inputSize)
                             val results = detector?.recognizeImage(finalBitmap)
-                            Log.d("fzc", "recognizeImage process timeMs : ${SystemClock.uptimeMillis() - startTime}")
+                            results?.apply {
+                                if (recognitionsHasDiff(results)) {
+                                    Log.d("fzc", "recognizeImage process timeMs : ${SystemClock.uptimeMillis() - startTime}")
+                                    recognitionsToSpeech(results, finalBitmap!!.width/2, finalBitmap.height/2 )
+                                }
+                            }
 
-                            recognitionsToSpeech(results)
                         })
                     }
                 }
@@ -200,11 +205,85 @@ class CameraActivity : BaseActivity() {
 
     }
 
-    private fun recognitionsToSpeech(recognitions: ArrayList<Classifier.Recognition>?) {
-        recognitions?.forEach { item ->
-            Log.d("fzc", "item: id = ${item.id} confidence = ${item.confidence} title = ${item.title} location = ${item.location} detectedClass = ${item.detectedClass}")
-            textToSpeech?.speak(item.title, TextToSpeech.QUEUE_ADD, null, item.id)
+    private fun recognitionsHasDiff(newRecognitions : MutableList<Classifier.Recognition>) : Boolean {
+        if (lastMap == null) {
+            lastMap = mutableMapOf<String, Int>().apply {
+                newRecognitions.forEach { recognition ->
+                    if (this.containsKey(recognition.title)) {
+                        this[recognition.title] = this.getValue(recognition.title) + 1
+                    } else {
+                        this[recognition.title] = 1
+                    }
+
+                }
+            }
+            return true
         }
+
+        val newMap = mutableMapOf<String, Int>().apply {
+            newRecognitions.forEach { recognition ->
+                if (this.containsKey(recognition.title)) {
+                    this[recognition.title] = this.getValue(recognition.title) + 1
+                } else {
+                    this[recognition.title] = 1
+                }
+
+            }
+        }
+
+        var hasDiff = false
+        if (Math.abs(newMap.size - lastMap!!.size) <= 1) {
+            if (newMap.size >= lastMap!!.size) {
+                lastMap!!.forEach {
+                    if (lastMap!![it.key] != it.value) {
+                        hasDiff =true
+                    }
+                }
+            } else  {
+                newMap.forEach {
+                    if (lastMap!![it.key] != it.value) {
+                        hasDiff =true
+                    }
+                }
+            }
+        } else {
+            hasDiff = true
+        }
+
+
+        if (hasDiff) {
+            lastMap = newMap
+        }
+        return hasDiff
+
+    }
+
+    private fun recognitionsToSpeech(recognitions: ArrayList<Classifier.Recognition>?, centerX : Int, centerY: Int) {
+        var speechText = ""
+        recognitions?.forEach { item ->
+            Log.d("fzc", "item: id = ${item.id} confidence = ${item.confidence} title = ${item.title} location: item.location.left = ${item.location.left}  item.location.right = ${item.location.right} item.location.bottom = ${item.location.bottom} item.location.top = ${item.location.top} detectedClass = ${item.detectedClass}")
+            var locate = ""
+            locate += if (item.location.left >= centerX) {
+                "右"
+            } else if(item.location.right <= centerX) {
+                "左"
+            } else {
+                "中间"
+            }
+
+            locate += if (item.location.bottom <= centerY) {
+                "上方"
+            } else if (item.location.top >= centerY) {
+                "下方"
+            } else if (!locate.equals("中间")) {
+                "中"
+            } else {
+                "方"
+            }
+            speechText += locate + "有" + item.title + ";"
+        }
+        Log.d("fzc", speechText)
+        textToSpeech?.speak(speechText, TextToSpeech.QUEUE_FLUSH, null, "")
     }
 
     private fun textToSpeechDestory() {

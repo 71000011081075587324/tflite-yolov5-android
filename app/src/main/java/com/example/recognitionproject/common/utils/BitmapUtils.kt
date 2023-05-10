@@ -3,7 +3,6 @@ package com.example.recognitionproject.common.utils
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Matrix
-import android.util.Log
 
 /**
  * Created by fangzicheng
@@ -29,7 +28,7 @@ object BitmapUtils {
         if (bitmap == null || newWidth == null || newWidth <= 0 || newHeight == null || newHeight <= 0) return bitmap
         val width = bitmap.width
         val height = bitmap.height
-        Log.d("fzc", "width = $width  height = $height")
+//        Log.d("fzc", "width = $width  height = $height")
 
         // 计算缩放比例
         val scaleWidth = newWidth.toFloat() / width
