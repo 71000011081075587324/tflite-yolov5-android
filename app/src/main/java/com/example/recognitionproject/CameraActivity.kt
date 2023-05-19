@@ -12,12 +12,11 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
 import androidx.camera.core.ImageProxy
-import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.example.recognitionproject.activity.BaseActivity
 import com.example.recognitionproject.common.ui.LButton
+import com.example.recognitionproject.common.ui.RecognitionSurfaceView
 import com.example.recognitionproject.common.utils.BitmapUtils
 import com.example.tflite_yolov5.DetectorFactory
 import com.example.tflite_yolov5.classifier.Classifier
@@ -30,9 +29,10 @@ import java.util.concurrent.Executors
 
 class CameraActivity : BaseActivity() {
 
-    private var viewFinder: PreviewView? = null
+//    private var viewFinder: PreviewView? = null
     private var lbtnBack: LButton? = null
     private var cameraExecutor: ExecutorService? = null
+    private var surfaceView : RecognitionSurfaceView? = null
 
     private var detector: YoloV5Classifier? = null
 
@@ -53,8 +53,9 @@ class CameraActivity : BaseActivity() {
     }
 
     private fun initView() {
-        viewFinder = findViewById(R.id.viewFinder)
+//        viewFinder = findViewById(R.id.viewFinder)
         lbtnBack = findViewById(R.id.lbtn_camera_back)
+        surfaceView = findViewById(R.id.surface_view_recognition)
 
         lbtnBack?.setOnClickListener {
             finish()
@@ -119,13 +120,13 @@ class CameraActivity : BaseActivity() {
             // Used to bind the lifecycle of cameras to the lifecycle owner
             // 用于将相机的生命周期绑定到应用进程中的 LifecycleOwner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-            // Preview
-            // 初始化 Preview 对象，在其上调用 build，从取景器中获取 Surface 提供程序，然后在预览上进行设置
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(viewFinder?.surfaceProvider)
-                }
+//            // Preview
+//            // 初始化 Preview 对象，在其上调用 build，从取景器中获取 Surface 提供程序，然后在预览上进行设置
+//            val preview = Preview.Builder()
+//                .build()
+//                .also {
+//                    it.setSurfaceProvider(viewFinder?.surfaceProvider)
+//                }
             // Select back camera as a default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -150,6 +151,8 @@ class CameraActivity : BaseActivity() {
                             val startTime = SystemClock.uptimeMillis()
                             val finalBitmap = BitmapUtils.resizeBitmap(it, detector?.inputSize, detector?.inputSize)
                             val results = detector?.recognizeImage(finalBitmap)
+                            surfaceView?.setCameraBitmap(finalBitmap)
+                            surfaceView?.setNewRecognitions(results)
                             results?.apply {
                                 if (recognitionsHasDiff(results)) {
                                     Log.d("fzc", "recognizeImage process timeMs : ${SystemClock.uptimeMillis() - startTime}")
@@ -169,7 +172,7 @@ class CameraActivity : BaseActivity() {
                 // Bind use cases to camera
                 // 将 cameraSelector 、预览对象、相机帧调用绑定到 cameraProvider
                 cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageAnalyzer)
+                    this, cameraSelector, imageAnalyzer)
 
             } catch(exc: Exception) {
             }

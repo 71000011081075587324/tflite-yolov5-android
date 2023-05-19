@@ -7,11 +7,27 @@
     tools:context=".CameraActivity"
     android:background="@color/white">
 
-    <androidx.camera.view.PreviewView
-        android:id="@+id/viewFinder"
+<!--    <androidx.camera.view.PreviewView-->
+<!--        android:id="@+id/viewFinder"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="640dp"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--    <com.example.recognitionproject.common.ui.RecognitionSurfaceView-->
+<!--        android:id="@+id/surface_view_recognition"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="640dp"-->
+<!--        app:layout_constraintBottom_toBottomOf="@+id/viewFinder"-->
+<!--        app:layout_constraintEnd_toEndOf="@+id/viewFinder"-->
+<!--        app:layout_constraintStart_toStartOf="@+id/viewFinder"-->
+<!--        app:layout_constraintTop_toTopOf="@+id/viewFinder" />-->
+
+    <com.example.recognitionproject.common.ui.RecognitionSurfaceView
+        android:id="@+id/surface_view_recognition"
         android:layout_width="match_parent"
         android:layout_height="640dp"
-        app:layout_constraintBottom_toTopOf="@+id/lbtn_camera_back"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -23,9 +39,9 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/viewFinder"
+        app:layout_constraintTop_toBottomOf="@+id/surface_view_recognition"
         android:text="@string/bltn_camera_back"
-        android:textSize="25sp"
+        android:textSize="40sp"
         android:background="@drawable/lbtn_corner"
         android:textColor="@color/black"
         android:paddingRight="50dp"

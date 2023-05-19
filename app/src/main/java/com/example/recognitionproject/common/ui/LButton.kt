@@ -10,8 +10,7 @@ import com.example.recognitionproject.common.utils.dp
  */
 class LButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
-) :
-    AppCompatButton(context, attrs) {
+) : AppCompatButton(context, attrs) {
 
     init {
         initCheckViewParam()
